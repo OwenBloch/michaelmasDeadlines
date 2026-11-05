@@ -127,28 +127,6 @@ h1 {
 .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--k); }
 .sw.dashed { background: transparent; border: 1.5px dashed var(--k); }
 
-.pair { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.pair-label { font-size: 13px; color: var(--muted); }
-.seg {
-  display: inline-flex;
-  flex-wrap: wrap;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--surface);
-}
-.seg label {
-  position: relative;
-  padding: 5px 11px;
-  font-size: 13px;
-  cursor: pointer;
-  border-left: 1px solid var(--line);
-  font-variant-numeric: tabular-nums;
-}
-.seg label:first-child { border-left: 0; }
-.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
-.seg label:has(input:checked) { background: var(--lab-bg); color: var(--lab); font-weight: 600; }
-.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .layout { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1060px) {
@@ -342,18 +320,8 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
       <li class="k-test"><span class="sw"></span>In-class test</li>
       <li class="k-interview"><span class="sw"></span>Interview</li>
       <li class="k-lab"><span class="sw"></span>Lab</li>
-      <li class="k-lab"><span class="sw dashed"></span>Possible lab slot</li>
       <li class="k-class"><span class="sw"></span>Class</li>
     </ul>
-    <div class="pair" role="radiogroup" aria-labelledby="pair-label">
-      <span class="pair-label" id="pair-label">Your Electronic Circuits lab pair</span>
-      <div class="seg">
-        <label><input type="radio" name="pair" id="pair-unsure" value="unsure">Not sure</label>
-        <label><input type="radio" name="pair" id="pair-a" value="a">9 &amp; 18 Nov</label>
-        <label><input type="radio" name="pair" id="pair-b" value="b">11 &amp; 23 Nov</label>
-        <label><input type="radio" name="pair" id="pair-c" value="c">16 &amp; 25 Nov</label>
-      </div>
-    </div>
   </div>
 
   <div class="layout">
@@ -411,17 +379,20 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
     { id: 'maths', date: '2026-11-10', time: '07:59', title: 'Assignment 2', short: 'Maths A2',
       module: 'Engineering Maths V', code: 'MAU33E01', kind: 'submit',
       note: 'Due at 8am, so Monday night is the real deadline.' },
+    { id: 'lab2', date: '2026-11-11', time: '14:00', title: 'Lab 2', short: 'EC Lab 2',
+      module: 'Electronic Circuits', code: 'EEU33C13', kind: 'lab',
+      note: 'Room B1.013, E3 Learning Foundry basement. Labs 2 and 3 are linked, so you need both.' },
     { id: 'sslab', date: '2026-11-16', time: '23:59', title: 'Lab report (2 Nov session)', short: 'S&S lab report',
       module: 'Signals & Systems', code: 'EEU33C01', kind: 'submit',
       note: 'Three attempts allowed.' },
+    { id: 'lab3', date: '2026-11-23', time: '09:00', title: 'Lab 3', short: 'EC Lab 3',
+      module: 'Electronic Circuits', code: 'EEU33C13', kind: 'lab',
+      note: 'Room B1.013, E3 Learning Foundry basement. Labs 2 and 3 are linked, so you need both.' },
     { id: 'ica2', date: '2026-11-27', time: '', title: 'In-class assignment 2', short: 'Maths in-class',
       module: 'Engineering Maths V', code: 'MAU33E01', kind: 'test',
       note: 'Friday lecture slot. The first one started at 11:00 sharp and ran 40 minutes, pen and paper.' }
   ];
 
-  var PAIRS = { a: ['2026-11-09', '2026-11-18'], b: ['2026-11-11', '2026-11-23'], c: ['2026-11-16', '2026-11-25'] };
-  var ALL_SLOTS = [['2026-11-09', 2], ['2026-11-11', 2], ['2026-11-16', 2], ['2026-11-18', 3], ['2026-11-23', 3], ['2026-11-25', 3]];
-  var LAB_NOTE = 'Room B1.013, E3 Learning Foundry basement. Labs 2 and 3 are linked, so you need both.';
 
   function load(key, fallback) {
     try { var v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
@@ -431,8 +402,6 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
   }
 
   var done = load('mdl-done', {}) || {};
-  var pair = load('mdl-pair', 'unsure');
-  if (!(pair in PAIRS)) pair = 'unsure';
 
   function parse(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function key(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -446,33 +415,6 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
     if (n === 1) return 'Tomorrow';
     return 'In ' + n + ' days';
   }
-  function slotTime(s) { return parse(s).getDay() === 1 ? '09:00' : '14:00'; }
-
-  function labGrid() {
-    var slots = pair in PAIRS
-      ? PAIRS[pair].map(function (d, i) { return [d, i + 2]; })
-      : ALL_SLOTS;
-    return slots.map(function (s) {
-      return { id: 'lab' + s[1], date: s[0], time: slotTime(s[0]), short: 'EC Lab ' + s[1], kind: 'lab', tentative: !(pair in PAIRS) };
-    });
-  }
-  function labAgenda() {
-    if (pair in PAIRS) {
-      return PAIRS[pair].map(function (d, i) {
-        return { id: 'lab' + (i + 2), date: d, time: slotTime(d), title: 'Lab ' + (i + 2),
-          module: 'Electronic Circuits', code: 'EEU33C13', kind: 'lab', note: LAB_NOTE };
-      });
-    }
-    return [
-      { id: 'lab2', date: '2026-11-09', when: 'Mon 9, Wed 11 or Mon 16 Nov', title: 'Lab 2 (your slot)',
-        module: 'Electronic Circuits', code: 'EEU33C13', kind: 'lab', tentative: true,
-        note: 'Pick your lab pair above to pin the dates. ' + LAB_NOTE },
-      { id: 'lab3', date: '2026-11-18', when: 'Wed 18, Mon 23 or Wed 25 Nov', title: 'Lab 3 (your slot)',
-        module: 'Electronic Circuits', code: 'EEU33C13', kind: 'lab', tentative: true,
-        note: 'Mondays 09:00, Wednesdays 14:00. Your Lab 3 date is paired with your Lab 2 date.' }
-    ];
-  }
-
   function byDate(a, b) {
     return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.time || '99') < (b.time || '99') ? -1 : 1;
   }
@@ -497,7 +439,7 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
 
   function renderGrid() {
     var start = new Date(2026, 10, 2);
-    var all = EVENTS.concat(labGrid());
+    var all = EVENTS;
     var html = '';
     for (var w = 0; w < 5; w++) {
       html += '<div class="wk" aria-hidden="true">Wk<b>' + (8 + w) + '</b></div>';
@@ -533,7 +475,7 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
   }
 
   function renderAgenda() {
-    var all = EVENTS.concat(labAgenda()).sort(byDate);
+    var all = EVENTS.slice().sort(byDate);
     var upcoming = all.filter(function (e) { return diff(e.date) >= 0; });
     var past = all.filter(function (e) { return diff(e.date) < 0; });
     document.getElementById('agenda').innerHTML = upcoming.length
@@ -569,16 +511,6 @@ footer { font-family: var(--f-mono); font-size: 12px; color: var(--muted); max-w
     render();
     var again = document.getElementById('done-' + id);
     if (again) again.focus();
-  });
-
-  document.querySelectorAll('input[name="pair"]').forEach(function (r) {
-    r.checked = r.value === pair;
-    r.addEventListener('change', function () {
-      if (!r.checked) return;
-      pair = r.value;
-      save('mdl-pair', pair);
-      render();
-    });
   });
 
   render();
